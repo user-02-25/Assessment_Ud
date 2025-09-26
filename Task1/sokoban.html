@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sokoban Clone</title>
+    <link rel="stylesheet" href="sokoban.css" />
+  </head>
+  <body>
+    <h1>Welcome to Mini Sokoban!</h1>
+    <div class="game-info">
+      <div class="info-item">
+        <strong>Moves:</strong> <span id="moves">0</span>
+      </div>
+      <div class="info-item">
+        <strong>Time:</strong> <span id="time">00:00</span>
+      </div>
+    </div>
+    <div class="game-container">
+      <div id="game"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" onclick="restartGame()">Restart</button>
+      <button class="btn" onclick="undoMove()" id="undoBtn" disabled>
+        Undo
+      </button>
+    </div>
+
+    <div class="instructions">
+      <h3>How to Play the Game</h3>
+      <p>Use arrow keys to move the player</p>
+      <p>Push all boxes onto the green targets to win</p>
+      <p>You can only push one box at a time</p>
+    </div>
+    <div id="winModal" class="modal">
+      <div class="modal-content">
+        <h2>🎉Congratulations!🎉</h2>
+        <p id="winMessage"></p>
+        <button class="btn" onclick="closeWinModal()">Play Again</button>
+      </div>
+    </div>
+
+    <script src="sokoban.js"></script>
+  </body>
+</html>
