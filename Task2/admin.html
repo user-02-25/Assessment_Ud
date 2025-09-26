@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sokoban Admin</title>
+    <link rel="stylesheet" href="frontPage.css" />
+  </head>
+  <body>
+    <h1>Admin - Puzzle Management</h1>
+    <p><a class="btn" href="/">← Back to Home</a></p>
+
+    <div id="guard" style="display: none; color: red; margin: 12px 0">
+      You must be logged in as an admin to access this page.
+    </div>
+
+    <div id="adminContent" style="display: none">
+      <h2>Create New Puzzle</h2>
+      <p>
+        Paste a Sokoban layout (7x7 for current game), using characters: #
+        walls, . floor, P player, B box, T target. One row per line.
+      </p>
+      <textarea
+        id="puzzleLayout"
+        rows="8"
+        cols="40"
+        placeholder="#######\n#.....#\n#.P.BT#\n#.....#\n#..B..#\n#..T..#\n#######"
+      ></textarea>
+      <div>
+        <button class="btn" id="createBtn">Create Puzzle</button>
+      </div>
+    </div>
+
+    <script>
+      function getUser() {
+        try {
+          return JSON.parse(localStorage.getItem("sokoban_user") || "null");
+        } catch {
+          return null;
+        }
+      }
+
+      function showGuard(msg) {
+        const guard = document.getElementById("guard");
+        guard.textContent = msg;
+        guard.style.display = "block";
+      }
+
+      async function createPuzzle() {
+        const user = getUser();
+        const layout = document.getElementById("puzzleLayout").value;
+        const res = await fetch("/admin/puzzles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: user.username, layout }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert("Puzzle created.");
+          document.getElementById("puzzleLayout").value = "";
+        } else {
+          alert(
+            "Create puzzle failed: " + (data.error || JSON.stringify(data))
+          );
+        }
+      }
+
+      (function init() {
+        const user = getUser();
+        if (!user) {
+          showGuard("You must be logged in as an admin to access this page.");
+          return;
+        }
+        if (user.role !== "admin") {
+          showGuard("Access denied. Admins only.");
+          return;
+        }
+        document.getElementById("adminContent").style.display = "block";
+        document
+          .getElementById("createBtn")
+          .addEventListener("click", createPuzzle);
+      })();
+    </script>
+  </body>
+</html>

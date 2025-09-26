@@ -1,0 +1,94 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #76b8e4;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  font-family: monospace;
+  font-size: 36px;
+  color: #19d58d;
+  text-shadow: 2px 2px 4px rgba(7, 82, 74, 0.8);
+  margin-top: 20px;
+  margin-bottom: 20px;
+  letter-spacing: 2px;
+}
+
+h2 {
+  font-family: monospace;
+  color: #ffffff;
+  margin: 15px 0;
+  text-shadow: 2px 2px 4px rgb(4, 5, 5);
+  font-size: 25px;
+}
+
+#auth-container {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 20px auto;
+  flex-wrap: wrap; 
+}
+
+#loginForm,
+#signupForm {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 20px;
+  border-radius: 12px;
+  width: 280px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+input {
+  width: 90%;
+  padding: 8px;
+  margin: 8px 0;
+  border: 2px solid #19d58d;
+  border-radius: 8px;
+  font-family: monospace;
+}
+
+.btn {
+  background: #f18339;
+  color: white;
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  padding: 10px 20px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.btn:hover {
+  background: #ff8800;
+  transform: scale(1.05);
+}
+
+table {
+  margin: 20px auto;
+  border-collapse: collapse;
+  width: 60%;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+table th,
+table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  font-family: monospace;
+}
+
+table th {
+  background: #19d58d;
+  color: white;
+  font-size: 18px;
+}

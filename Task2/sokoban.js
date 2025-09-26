@@ -1,0 +1,254 @@
+const gameElement = document.getElementById("game");
+const movesElement = document.getElementById("moves");
+const timeElement = document.getElementById("time");
+const undoBtn = document.getElementById("undoBtn");
+
+const defaultMap = [
+  "#######",
+  "#.....#",
+  "#.P.BT#",
+  "#.....#",
+  "#..B..#",
+  "#..T..#",
+  "#######",
+];
+
+let originalMap = defaultMap.map((row) => row.split(""));
+
+let map;
+let targets;
+let moves = 0;
+let startTime;
+let timer;
+let moveHistory = [];
+async function fetchLatestPuzzle() {
+  const res = await fetch("/puzzles/latest");
+  if (!res.ok) return null;
+  return await res.json();
+}
+
+function initGame() {
+  // reset map and targets
+  map = originalMap.map((row) => [...row]);
+  targets = [];
+  for (let y = 0; y < map.length; y++) {
+    for (let x = 0; x < map[y].length; x++) {
+      if (map[y][x] === "T") targets.push({ x, y });
+    }
+  }
+
+  moves = 0;
+  moveHistory = [];
+  startTime = Date.now();
+
+  updateUI();
+  draw();
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(timer);
+  timer = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    timeElement.textContent = `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  }, 1000);
+}
+
+function updateUI() {
+  movesElement.textContent = moves;
+  undoBtn.disabled = moveHistory.length === 0;
+}
+
+function draw() {
+  gameElement.innerHTML = "";
+
+  for (let y = 0; y < map.length; y++) {
+    for (let x = 0; x < map[y].length; x++) {
+      const cell = document.createElement("div");
+      cell.classList.add("cell");
+
+      const isTarget = targets.some((t) => t.x === x && t.y === y);
+      const cellType = map[y][x];
+
+      if (cellType === "#") {
+        cell.classList.add("wall");
+      } else if (cellType === "P") {
+        cell.classList.add("player");
+        if (!isTarget) cell.classList.add("floor");
+      } else if (cellType === "B") {
+        cell.classList.add("box");
+        if (isTarget) cell.classList.add("on-target");
+        if (!isTarget) cell.classList.add("floor");
+      } else if (cellType === "T") {
+        cell.classList.add("target");
+      } else {
+        cell.classList.add("floor");
+        if (isTarget) cell.classList.add("target");
+      }
+
+      gameElement.appendChild(cell);
+    }
+  }
+}
+
+function findPlayer() {
+  for (let y = 0; y < map.length; y++) {
+    for (let x = 0; x < map[y].length; x++) {
+      if (map[y][x] === "P") return { x, y };
+    }
+  }
+}
+
+function move(dx, dy) {
+  const { x, y } = findPlayer();
+  const newX = x + dx;
+  const newY = y + dy;
+
+  if (newY < 0 || newY >= map.length || newX < 0 || newX >= map[0].length)
+    return;
+
+  const nextCell = map[newY][newX];
+  const afterNext = map[newY + dy]?.[newX + dx];
+
+  const currentState = {
+    map: map.map((row) => [...row]),
+    moves: moves,
+  };
+
+  let moved = false;
+
+  if (nextCell === "#") return;
+
+  if (nextCell === "B") {
+    if (
+      newY + dy >= 0 &&
+      newY + dy < map.length &&
+      newX + dx >= 0 &&
+      newX + dx < map[0].length &&
+      (afterNext === "." || afterNext === "T")
+    ) {
+      map[newY + dy][newX + dx] = "B"; // move box
+      map[newY][newX] = "P"; // player moves
+      map[y][x] = restoreCell(x, y);
+      moved = true;
+    }
+  } else if (nextCell === "." || nextCell === "T") {
+    map[newY][newX] = "P";
+    map[y][x] = restoreCell(x, y);
+    moved = true;
+  }
+
+  if (moved) {
+    moveHistory.push(currentState);
+    moves++;
+    updateUI();
+    draw();
+
+    if (checkWin()) {
+      clearInterval(timer);
+
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+
+      setTimeout(showWinModal, 300);
+      saveScore(moves, elapsed);
+    }
+  }
+}
+
+function restoreCell(x, y) {
+  return targets.some((t) => t.x === x && t.y === y) ? "T" : ".";
+}
+
+function checkWin() {
+  return targets.every((t) => map[t.y][t.x] === "B");
+}
+function showWinModal() {
+  const modal = document.getElementById("winModal");
+  const message = document.getElementById("winMessage");
+
+  message.textContent = `You won in ${moves} moves and ${timeElement.textContent}!`;
+  modal.style.display = "flex";
+}
+
+function closeWinModal() {
+  document.getElementById("winModal").style.display = "none";
+  restartGame();
+}
+
+function undoMove() {
+  if (moveHistory.length > 0) {
+    const previousState = moveHistory.pop();
+    map = previousState.map;
+    moves = previousState.moves;
+    updateUI();
+    draw();
+  }
+}
+
+function restartGame() {
+  clearInterval(timer);
+  initGame();
+}
+function saveScore(moves, timeTaken) {
+  // Retrieve the user object from local storage key "sokoban_user"
+  const user = JSON.parse(localStorage.getItem("sokoban_user") || "null");
+
+  if (!user || !user.username) {
+    console.error("No user logged in. Score not saved.");
+    alert(
+      "You must be logged in to save your score! Please log in on the main page."
+    );
+    return;
+  }
+
+  fetch("/save-score", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    // Use these keys to match server.js endpoint
+    body: JSON.stringify({
+      username: user.username,
+      moves: moves,
+      time: timeTaken,
+    }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        console.log("Score saved successfully:", data);
+      } else {
+        console.error("Score save failed on server:", data.error);
+      }
+    })
+    .catch((err) => console.error("Error saving score:", err));
+}
+
+document.addEventListener("keydown", (e) => {
+  switch (e.key) {
+    case "ArrowUp":
+      move(0, -1);
+      break;
+    case "ArrowDown":
+      move(0, 1);
+      break;
+    case "ArrowLeft":
+      move(-1, 0);
+      break;
+    case "ArrowRight":
+      move(1, 0);
+      break;
+    case "u":
+    case "U":
+      undoMove();
+      break;
+    case "r":
+    case "R":
+      restartGame();
+      break;
+  }
+});
+
+initGame();
