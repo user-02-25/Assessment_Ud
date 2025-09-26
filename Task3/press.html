@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tap Sprint Game</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: #f7f7f7;
+      }
+      h1 {
+        margin-top: 20px;
+      }
+      #timer {
+        font-size: 40px;
+        margin: 20px;
+        font-weight: bold;
+      }
+      #scores {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+      }
+      .player {
+        font-size: 22px;
+        padding: 15px;
+        border-radius: 10px;
+        width: 120px;
+        background: #eee;
+        border: 3px solid #333;
+        transition: transform 0.2s;
+      }
+      .leader {
+        transform: scale(1.2);
+        border-color: gold;
+        background: #fff8dc;
+      }
+      .p1 {
+        background: #ffcccc;
+      }
+      .p2 {
+        background: #ccffcc;
+      }
+      .p3 {
+        background: #ccccff;
+      }
+      .p4 {
+        background: #fff0cc;
+      }
+      #winner {
+        margin-top: 30px;
+        font-size: 28px;
+        font-weight: bold;
+      }
+      #startBtn,
+      #restartBtn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 18px;
+        cursor: pointer;
+        border-radius: 8px;
+        border: none;
+        background: #007bff;
+        color: white;
+      }
+      #restartBtn {
+        display: none;
+        background: #28a745;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>15-Second Tap Sprint!</h1>
+    <p>
+      <strong>P1:</strong> A | <strong>P2:</strong> L | <strong>P3:</strong> S |
+      <strong>P4:</strong> K
+    </p>
+
+    <button id="startBtn" onclick="startCountdown()">Start Game</button>
+    <button id="restartBtn" onclick="startCountdown()">Play Again</button>
+
+    <div id="timer">Ready?</div>
+
+    <div id="scores">
+      <div class="player p1" id="p1Box">P1<br /><span id="p1">0</span></div>
+      <div class="player p2" id="p2Box">P2<br /><span id="p2">0</span></div>
+      <div class="player p3" id="p3Box">P3<br /><span id="p3">0</span></div>
+      <div class="player p4" id="p4Box">P4<br /><span id="p4">0</span></div>
+    </div>
+
+    <h2 id="winner"></h2>
+
+    <script>
+      let scores = { p1: 0, p2: 0, p3: 0, p4: 0 };
+      let gameActive = false;
+      let timeLeft = 15;
+      let timer;
+
+      function startCountdown() {
+        document.getElementById("startBtn").style.display = "none";
+        document.getElementById("restartBtn").style.display = "none";
+        document.getElementById("winner").textContent = "";
+        scores = { p1: 0, p2: 0, p3: 0, p4: 0 };
+        updateScores();
+
+        let count = 3;
+        document.getElementById("timer").textContent = "Starting in " + count;
+        let countdown = setInterval(() => {
+          count--;
+          if (count > 0) {
+            document.getElementById("timer").textContent =
+              "Starting in " + count;
+          } else {
+            clearInterval(countdown);
+            startGame();
+          }
+        }, 1000);
+      }
+
+      function startGame() {
+        gameActive = true;
+        timeLeft = 15;
+        document.getElementById("timer").textContent = timeLeft;
+        timer = setInterval(() => {
+          timeLeft--;
+          document.getElementById("timer").textContent = timeLeft;
+          if (timeLeft <= 0) endGame();
+        }, 1000);
+      }
+
+      function endGame() {
+        clearInterval(timer);
+        gameActive = false;
+
+        let max = Math.max(...Object.values(scores));
+        let winners = Object.keys(scores).filter((p) => scores[p] === max);
+
+        if (max === 0) {
+          document.getElementById("winner").textContent =
+            "No one tapped, it's a tie for all!";
+        } else if (winners.length > 1) {
+          let names = winners.map((w) => w.toUpperCase()).join(" & ");
+          document.getElementById("winner").textContent =
+            "It's a tie between " + names + "!";
+        } else {
+          document.getElementById("winner").textContent =
+            winners[0].toUpperCase() + " Wins with " + max + " taps!";
+        }
+
+        document.getElementById("restartBtn").style.display = "inline-block";
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (!gameActive) return;
+        if (e.key.toLowerCase() === "a") scores.p1++;
+        if (e.key.toLowerCase() === "l") scores.p2++;
+        if (e.key.toLowerCase() === "s") scores.p3++;
+        if (e.key.toLowerCase() === "k") scores.p4++;
+        updateScores();
+      });
+
+      function updateScores() {
+        for (let p in scores) {
+          document.getElementById(p).textContent = scores[p];
+          document.getElementById(p + "Box").classList.remove("leader");
+        }
+        // highlight leader live
+        let max = Math.max(...Object.values(scores));
+        if (max > 0) {
+          Object.keys(scores).forEach((p) => {
+            if (scores[p] === max)
+              document.getElementById(p + "Box").classList.add("leader");
+          });
+        }
+      }
+    </script>
+  </body>
+</html>
